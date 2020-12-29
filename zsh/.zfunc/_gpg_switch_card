@@ -1,0 +1,5 @@
+#compdef _gpg_switch_card gpg_switch_card
+
+_gpg_switch_card(){
+  _arguments '1: :(keyring home nano)'
+}

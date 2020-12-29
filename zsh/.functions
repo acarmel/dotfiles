@@ -1,0 +1,37 @@
+
+# Switch between gpg cards
+gpg_switch_card() {
+  local gpg_cards_list="keyring home nano"
+
+  if [[ "$#" != 1 || $(grep -vw $1 <<< $gpg_cards_list)  ]]; then
+    echo "Usage: ${funcstack[1]} <$(sed "s/ /|/g" <<< $gpg_cards_list)>"
+		return 1
+  fi
+
+  local private_keys_dir="${HOME}/.gnupg/private-keys-v1.d"
+  local new_card_keys_dir="${HOME}/.gnupg/private-keys-v1.d.yk-$1"
+
+  if [[ ! -d "$new_card_keys_dir" ]]; then
+    echo "No private keys dir for '$1' card. (${new_card_keys_dir} does not exist)"
+		return 1
+	fi
+
+  if [[ ! -h "$private_keys_dir" ]]; then
+    echo "GPG private keys dir is not a softlink." \
+         "Stopping to prevent data loss ($private_keys_dir)."
+		return 1
+	fi
+
+  local current_card
+  current_card="$(readlink ${private_keys_dir} | sed 's/.*\.yk-//' )"
+
+  if [[ $1 == "$current_card" ]]; then
+    echo "GPG card is already set to '$1'."
+  else
+    echo "Switching from '${current_card}' to '$1'."
+  fi
+
+	(cd ${HOME}/.gnupg/ && gln -sfTr $new_card_keys_dir private-keys-v1.d)
+}
+
+
